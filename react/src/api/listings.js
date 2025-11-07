@@ -1,5 +1,10 @@
 import instance from './axios';
 
+export const fetchListings = async (params = {}) => {
+  const response = await instance.get('/api/listings/', { params });
+  return response.data;
+};
+
 export const getCategories = async () => {
   const response = await instance.get('/api/categories/');
   return response.data;
