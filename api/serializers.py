@@ -7,16 +7,30 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     """
     Serializer for user registration.
     """
-    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password = serializers.CharField(
+        write_only=True,
+        required=True,
+        validators=[validate_password]
+    )
     password_confirm = serializers.CharField(write_only=True, required=True)
     
     class Meta:
         model = User
-        fields = ["id", "username", "email", "phone", "password", "password_confirm", "profile_photo"]
+        fields = [
+            "id",
+            "username",
+            "email",
+            "phone",
+            "password",
+            "password_confirm",
+            "profile_photo"
+        ]
     
     def validate(self, attrs):
         if attrs["password"] != attrs["password_confirm"]:
-            raise serializers.ValidationError({"password": "Password fields didn't match."})
+            raise serializers.ValidationError(
+                {"password": "Password fields didn't match."}
+            )
         return attrs
     
     def create(self, validated_data):
@@ -33,7 +47,16 @@ class UserSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ["id", "username", "email", "phone", "profile_photo", "active_listings_count", "is_staff", "is_blocked"]
+        fields = [
+            "id",
+            "username",
+            "email",
+            "phone",
+            "profile_photo",
+            "active_listings_count",
+            "is_staff",
+            "is_blocked"
+        ]
         read_only_fields = ["id", "is_staff", "is_blocked"]
     
     def get_active_listings_count(self, obj):
@@ -69,6 +92,16 @@ class ListingImageSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at"]
 
 
+class AuthorSerializer(serializers.ModelSerializer):
+    """
+    Serializer for listing author details.
+    """
+    class Meta:
+        model = User
+        fields = ["id", "username", "phone", "profile_photo"]
+        read_only_fields = ["id", "username", "phone", "profile_photo"]
+
+
 class ListingListSerializer(serializers.ModelSerializer):
     """
     Serializer for listing list view.
@@ -80,8 +113,17 @@ class ListingListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Listing
         fields = [
-            "id", "title", "description", "price", "author", "author_username",
-            "category", "category_name", "status", "created_at", "first_image"
+            "id",
+            "title",
+            "description",
+            "price",
+            "author",
+            "author_username",
+            "category",
+            "category_name",
+            "status",
+            "created_at",
+            "first_image"
         ]
         read_only_fields = ["id", "author", "created_at"]
     
@@ -97,19 +139,35 @@ class ListingListSerializer(serializers.ModelSerializer):
 
 class ListingDetailSerializer(serializers.ModelSerializer):
     """
-    Serializer for listing detail view.
+    Serializer for listing detail view with nested author and images.
     """
-    author = UserSerializer(read_only=True)
+    author = AuthorSerializer(read_only=True)
     category = CategorySerializer(read_only=True)
     images = ListingImageSerializer(many=True, read_only=True)
     
     class Meta:
         model = Listing
         fields = [
-            "id", "title", "description", "price", "author", "category",
-            "phone", "status", "is_moderated", "created_at", "updated_at", "images"
+            "id",
+            "title",
+            "description",
+            "price",
+            "author",
+            "category",
+            "phone",
+            "status",
+            "is_moderated",
+            "created_at",
+            "updated_at",
+            "images"
         ]
-        read_only_fields = ["id", "author", "created_at", "updated_at", "is_moderated"]
+        read_only_fields = [
+            "id",
+            "author",
+            "created_at",
+            "updated_at",
+            "is_moderated"
+        ]
 
 
 class ListingCreateUpdateSerializer(serializers.ModelSerializer):
@@ -125,12 +183,47 @@ class ListingCreateUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Listing
-        fields = ["id", "title", "description", "price", "category", "phone", "status", "images_data"]
+        fields = [
+            "id",
+            "title",
+            "description",
+            "price",
+            "category",
+            "phone",
+            "status",
+            "images_data"
+        ]
         read_only_fields = ["id"]
+    
+    def validate_title(self, value):
+        if not value or len(value.strip()) == 0:
+            raise serializers.ValidationError("Title is required and cannot be empty.")
+        return value
+    
+    def validate_description(self, value):
+        if not value or len(value.strip()) == 0:
+            raise serializers.ValidationError(
+                "Description is required and cannot be empty."
+            )
+        return value
+    
+    def validate_price(self, value):
+        if value <= 0:
+            raise serializers.ValidationError("Price must be greater than 0.")
+        return value
+    
+    def validate_phone(self, value):
+        if not value or len(value.strip()) == 0:
+            raise serializers.ValidationError(
+                "Phone number is required and cannot be empty."
+            )
+        return value
     
     def validate_images_data(self, value):
         if len(value) > 5:
-            raise serializers.ValidationError("Maximum 5 images allowed per listing.")
+            raise serializers.ValidationError(
+                "Maximum 5 images allowed per listing."
+            )
         return value
     
     def create(self, validated_data):
@@ -138,7 +231,11 @@ class ListingCreateUpdateSerializer(serializers.ModelSerializer):
         listing = Listing.objects.create(**validated_data)
         
         for index, image in enumerate(images_data):
-            ListingImage.objects.create(listing=listing, image=image, order=index)
+            ListingImage.objects.create(
+                listing=listing,
+                image=image,
+                order=index
+            )
         
         return listing
     
@@ -152,7 +249,11 @@ class ListingCreateUpdateSerializer(serializers.ModelSerializer):
         if images_data is not None:
             instance.images.all().delete()
             for index, image in enumerate(images_data):
-                ListingImage.objects.create(listing=instance, image=image, order=index)
+                ListingImage.objects.create(
+                    listing=instance,
+                    image=image,
+                    order=index
+                )
         
         return instance
 
@@ -165,14 +266,16 @@ class AdminStatsSerializer(serializers.Serializer):
     total_listings = serializers.IntegerField()
     active_listings = serializers.IntegerField()
     inactive_listings = serializers.IntegerField()
-    user_activity = serializers.DictField()
+    listings_last_7_days = serializers.IntegerField()
+    active_users = serializers.IntegerField()
+    user_activity = serializers.ListField()
 
 
 class ListingModerateSerializer(serializers.Serializer):
     """
     Serializer for moderating listings.
     """
-    action = serializers.ChoiceField(choices=["approve", "reject"])
+    action = serializers.ChoiceField(choices=["approve", "reject", "delete"])
     
     def validate(self, attrs):
         return attrs

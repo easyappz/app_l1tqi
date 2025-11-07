@@ -4,12 +4,12 @@ from .models import Listing
 
 class ListingFilter(filters.FilterSet):
     """
-    Filter class for Listing model.
+    Filter for listings with category and price range.
     """
     category = filters.NumberFilter(field_name="category__id")
-    price_min = filters.NumberFilter(field_name="price", lookup_expr="gte")
-    price_max = filters.NumberFilter(field_name="price", lookup_expr="lte")
+    min_price = filters.NumberFilter(field_name="price", lookup_expr="gte")
+    max_price = filters.NumberFilter(field_name="price", lookup_expr="lte")
     
     class Meta:
         model = Listing
-        fields = ["category", "price_min", "price_max", "status"]
+        fields = ["category", "min_price", "max_price", "status"]
