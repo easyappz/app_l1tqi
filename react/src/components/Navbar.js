@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -19,6 +20,9 @@ const Navbar = () => {
     e.preventDefault();
     if (searchQuery.trim()) {
       navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    } else {
+      navigate('/');
     }
   };
 
@@ -30,19 +34,21 @@ const Navbar = () => {
           <span className="navbar-logo-text" data-easytag="id26-react/src/components/Navbar.js">ClassifiedsBoard</span>
         </Link>
 
-        <form className="navbar-search" onSubmit={handleSearch} data-easytag="id27-react/src/components/Navbar.js">
-          <input
-            type="text"
-            className="navbar-search-input"
-            placeholder="Search listings..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            data-easytag="id28-react/src/components/Navbar.js"
-          />
-          <button type="submit" className="navbar-search-button" data-easytag="id29-react/src/components/Navbar.js">
-            🔍
-          </button>
-        </form>
+        {location.pathname === '/' && (
+          <form className="navbar-search" onSubmit={handleSearch} data-easytag="id27-react/src/components/Navbar.js">
+            <input
+              type="text"
+              className="navbar-search-input"
+              placeholder="Search listings..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              data-easytag="id28-react/src/components/Navbar.js"
+            />
+            <button type="submit" className="navbar-search-button" data-easytag="id29-react/src/components/Navbar.js">
+              🔍
+            </button>
+          </form>
+        )}
 
         <div className="navbar-actions" data-easytag="id30-react/src/components/Navbar.js">
           {isAuthenticated ? (

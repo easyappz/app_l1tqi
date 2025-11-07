@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchCurrentUser = async () => {
     try {
-      const response = await instance.get('/api/auth/me/');
+      const response = await instance.get('/api/auth/profile/');
       setUser(response.data);
     } catch (error) {
       console.error('Failed to fetch user:', error);
@@ -37,24 +37,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
-    const response = await instance.post('/api/auth/login/', { email, password });
-    const { token, user: userData } = response.data;
-    localStorage.setItem('token', token);
+  const login = async (username, password) => {
+    const response = await instance.post('/api/auth/login/', { username, password });
+    const { tokens, user: userData } = response.data;
+    localStorage.setItem('token', tokens.access);
+    localStorage.setItem('refresh_token', tokens.refresh);
     setUser(userData);
     return userData;
   };
 
   const register = async (userData) => {
     const response = await instance.post('/api/auth/register/', userData);
-    const { token, user: newUser } = response.data;
-    localStorage.setItem('token', token);
+    const { tokens, user: newUser } = response.data;
+    localStorage.setItem('token', tokens.access);
+    localStorage.setItem('refresh_token', tokens.refresh);
     setUser(newUser);
     return newUser;
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
     setUser(null);
   };
 
